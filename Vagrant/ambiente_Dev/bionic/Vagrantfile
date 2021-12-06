@@ -6,13 +6,18 @@ SCRIPT
 
 Vagrant.configure("2") do |config|
     config.vm.box = "ubuntu/bionic64"
+    config.vm.provider "virtualbox" do |vb|
+        vb.memory = 512
+        vb.cpus = 1
+    end
+      
 
     config.vm.define "mysqldb" do |mysql|
         mysql.vm.network "public_network", ip: "192.168.0.25"
         mysql.vm.synced_folder "./configs", "/configs"
         
         mysql.vm.provision "shell",
-            inline: "cat /configs/ssh-key_bionic >> .ssh/authorized_keys"
+            inline: "cat /configs/.ssh-key_bionic >> .ssh/authorized_keys"
         mysql.vm.provision "shell",
             inline: $download_mysql
         mysql.vm.provision "shell",
@@ -26,6 +31,12 @@ Vagrant.configure("2") do |config|
         phpweb.vm.network "forwarded_port", guest: 8888, host:8080
         phpweb.vm.network "public_network", ip: "192.168.0.26"
 
+        config.vm.provider "virtualbox" do |vb|
+            vb.memory = 1024
+            vb.cpus = 2
+            vb.name = "ubuntu_bionic_php7"
+        end
+
         phpweb.vm.provision "shell",
             inline: "sudo apt update && sudo apt install puppet -y"
         phpweb.vm.provision "puppet" do |puppet|
@@ -37,23 +48,35 @@ Vagrant.configure("2") do |config|
     config.vm.define "mysqlserver" do |mysqlserver|
         mysqlserver.vm.network "public_network", ip: "192.168.0.24"
         mysqlserver.vm.provision "shell",
-            inline: "cat /vagrant/configs/ssh-key_bionic >> .ssh/authorized_keys"
+            inline: "cat /vagrant/configs/.ssh-key_bionic >> .ssh/authorized_keys"
     end
 
     config.vm.define "ansible" do |ansible|
         ansible.vm.network "public_network", ip: "192.168.0.23"
         
         ansible.vm.provision "shell",
-        inline: "cp /vagrant/ssh-key_bionic_priv /home/vagrant && \
-                chmod 600 /home/vagrant/ssh-key_bionic_priv && \
-                sudo chown vagrant:vagrant ssh-key_bionic_priv && \
-                cp /vagrant/configs/ssh-key_bionic /home/vagrant && \
-                sudo chown vagrant:vagrant ssh-key_bionic"
+        inline: "cp /vagrant/.ssh-key_bionic_priv /home/vagrant && \
+                chmod 600 /home/vagrant/.ssh-key_bionic_priv && \
+                sudo chown vagrant:vagrant .ssh-key_bionic_priv && \
+                cp /vagrant/configs/.ssh-key_bionic /home/vagrant && \
+                sudo chown vagrant:vagrant .ssh-key_bionic"
         
         ansible.vm.provision "shell",
             inline: "apt-get update && \
                      apt-get install -y software-properties-common && \
                      apt-add-repository --yes --update ppa:ansible/ansible && \
                      apt-get install -y ansible"
+     
+        ansible.vm.provision "shell",
+            inline: "ansible-playbook -i /vagrant/configs/ansible/hosts /vagrant/configs/ansible/playbook.yml"
+    end
+
+    config.vm.define "memcached" do |memcached|
+        memcached.vm.box = "centos/8"
+        memcached.vm.provider "virtualbox" do |vb|
+            vb.memory = 512
+            vb.cpus = 1
+            vb.name = "centos8_memcached"
+        end
     end
 end

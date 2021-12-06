@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: mysqlserver
   handlers:
     - name: restart mysql
       service:
