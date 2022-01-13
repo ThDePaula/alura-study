@@ -1,7 +1,7 @@
 $downloaddocker = <<-SCRIPT
     apt update && \
     apt install docker.io -y && \
-    sudo usermod -aG docker vagrant
+    sudo usermod -aG docker vagrant && \ 
     sudo reboot
 SCRIPT
 
