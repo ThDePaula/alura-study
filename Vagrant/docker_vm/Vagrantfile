@@ -1,0 +1,69 @@
+$downloaddocker = <<-SCRIPT
+    apt update && \
+    apt install docker.io -y && \
+    sudo usermod -aG docker vagrant
+    sudo reboot
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.provider "virtualbox" do |vb|
+      vb.memory = 512
+      vb.cpus = 1
+  end
+
+  config.vm.define "docker-vm1" do |docker1|
+    docker1.vm.network "public_network", bridge: "wlp0s20f3", ip: "192.168.0.30"
+
+    docker1.vm.provision "shell",
+      inline: "sudo hostnamectl set-hostname master01"
+    docker1.vm.provision "shell",
+      inline: "cat /vagrant/configs/ssh >> /home/vagrant/.ssh/authorized_keys"
+    docker1.vm.provision "shell",
+      inline: $downloaddocker
+  end
+
+  config.vm.define "docker-vm2" do |docker2|
+    docker2.vm.network "public_network", bridge: "wlp0s20f3", ip: "192.168.0.31"
+
+    docker2.vm.provision "shell",
+      inline: "sudo hostnamectl set-hostname master02"
+    docker2.vm.provision "shell",
+      inline: "cat /vagrant/configs/ssh >> /home/vagrant/.ssh/authorized_keys"
+    docker2.vm.provision "shell",
+      inline: $downloaddocker
+  end
+
+  config.vm.define "docker-vm3" do |docker3|
+    docker3.vm.network "public_network", bridge: "wlp0s20f3", ip: "192.168.0.32"
+
+    docker3.vm.provision "shell",
+      inline: "sudo hostnamectl set-hostname master03"
+    docker3.vm.provision "shell",
+      inline: "cat /vagrant/configs/ssh >> /home/vagrant/.ssh/authorized_keys"
+    docker3.vm.provision "shell",
+      inline: $downloaddocker
+  end
+
+  config.vm.define "docker-vm4" do |docker4|
+    docker4.vm.network "public_network", bridge: "wlp0s20f3", ip: "192.168.0.33"
+
+    docker4.vm.provision "shell",
+      inline: "sudo hostnamectl set-hostname slave01"
+    docker4.vm.provision "shell",
+      inline: "cat /vagrant/configs/ssh >> /home/vagrant/.ssh/authorized_keys"
+    docker4.vm.provision "shell",
+      inline: $downloaddocker
+  end
+
+  config.vm.define "docker-vm5" do |docker5|
+    docker5.vm.network "public_network", bridge: "wlp0s20f3", ip: "192.168.0.34"
+
+    docker5.vm.provision "shell",
+      inline: "sudo hostnamectl set-hostname slave02"
+    docker5.vm.provision "shell",
+      inline: "cat /vagrant/configs/ssh >> /home/vagrant/.ssh/authorized_keys"
+    docker5.vm.provision "shell",
+      inline: $downloaddocker
+  end
+end
